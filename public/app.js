@@ -437,7 +437,7 @@ function updateCart() {
 }
 
 
-// --- LÓGICA DE EXPORTAÇÃO (ATUALIZADA) ---
+// --- LÓGICA DE EXPORTAÇÃO (VERSÃO FINAL COM AGRUPAMENTO DE AUXILIARES) ---
 function exportList() {
     const incompleteMotors = appState.motors.filter(m => !m.disjuntor || !m.contator);
     if (incompleteMotors.length > 0) {
@@ -450,49 +450,248 @@ function exportList() {
         showNotification('O painel está vazio!', 'warning');
         return;
     }
-    
-    let total = appState.cart.reduce((sum, item) => sum + (item.preco * item.quantity), 0);
 
-    const date = new Date().toLocaleDateString('pt-BR');
-    let content = `LISTA DE COMPONENTES - PAINEL ELÉTRICO\nData: ${date}\n\n`;
-    content += `CONFIGURAÇÃO DO PROJETO:\n`;
-    content += `Tipo: ${appState.voltageType}\nTensão: ${appState.voltage}V\nTotal de Motores: ${appState.motors.length}\n`;
-    content += `Potência Total: ${appState.motors.reduce((sum, m) => sum + m.power, 0).toFixed(1)} CV\n\n`;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let grandTotal = 0;
 
-    if(appState.motors.length > 0) {
-        content += `MOTORES E COMPONENTES ASSOCIADOS:\n${'='.repeat(60)}\n`;
-        appState.motors.forEach((motor, index) => {
-            content += `${index + 1}. MOTOR: ${motor.name} (${motor.power} CV / ${motor.current}A)\n`;
-            content += `   - Disjuntor: ${motor.disjuntor.nome} (Código: ${motor.disjuntor.codigo}) - R$ ${motor.disjuntor.preco.toFixed(2)}\n`;
-            content += `   - Contator:  ${motor.contator.nome} (Código: ${motor.contator.codigo}) - R$ ${motor.contator.preco.toFixed(2)}\n\n`;
-            total += motor.disjuntor.preco + motor.contator.preco;
+    // Função para adicionar o rodapé em cada página
+    const addPageFooter = () => {
+        const pageCount = doc.internal.getNumberOfPages();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 15;
+
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setTextColor(100);
+            doc.line(margin, pageHeight - 30, pageWidth - margin, pageHeight - 30);
+            doc.text('ACQUA NOBILIS | Rua Safira, 205 - Jardim Jóia | CEP: 07431-295 - Arujá - SP', margin, pageHeight - 20);
+            doc.text('Tel. +55 11 4651-4008', margin, pageHeight - 15);
+            const pageStr = `Página ${i} de ${pageCount}`;
+            doc.text(pageStr, pageWidth - margin, pageHeight - 20, { align: 'right' });
+        }
+    };
+
+    // Adiciona o logo e título
+    const logoImg = new Image();
+    logoImg.src = '/static/Logo-Acqua-Nobilis-nova-retangular-branca-2048x430.png';
+    doc.addImage(logoImg, 'PNG', 15, 12, 70, 15);
+    doc.setFontSize(14);
+    doc.text('LISTA DE MOTORES E CONSUMIDORES ELÉTRICOS', 105, 40, { align: 'center' });
+
+    const head = [['Item', 'Descrição', 'Potência', 'Tensão Entrada', 'Tensão Saída', 'Corrente (A)', 'Qtd.', 'Preço Unit.', 'Total']];
+    const body = [];
+    const groupHeaderStyles = { fontStyle: 'bold', fillColor: '#f0f0f0' };
+
+    // 1. Processa os Motores e seus componentes dependentes
+    appState.motors.forEach(motor => {
+        const motorTotal = (motor.disjuntor?.preco || 0) + (motor.contator?.preco || 0);
+        grandTotal += motorTotal;
+
+        // Linha do Motor
+        body.push([
+            { content: motor.name, styles: groupHeaderStyles },
+            { content: `Motor ${appState.voltageType}`, styles: groupHeaderStyles },
+            { content: `${motor.power} CV`, styles: groupHeaderStyles },
+            { content: appState.voltage, styles: groupHeaderStyles },
+            '',
+            { content: `${motor.current} A`, styles: groupHeaderStyles },
+            { content: '1', styles: groupHeaderStyles },
+            '',
+            { content: `R$ ${motorTotal.toFixed(2)}`, styles: groupHeaderStyles }
+        ]);
+
+        // Linhas dos componentes dependentes
+        if (motor.disjuntor) {
+            const disjuntor = motor.disjuntor;
+            body.push([
+                disjuntor.codigo, disjuntor.nome, '', `${appState.voltage}V`, '', `${disjuntor.faixa_ajuste_A} A`, '1', `R$ ${disjuntor.preco.toFixed(2)}`, `R$ ${disjuntor.preco.toFixed(2)}`
+            ]);
+        }
+        if (motor.contator) {
+            const contator = motor.contator;
+            body.push([
+                contator.codigo, contator.nome, '', `${appState.voltage}V`, '', `${contator.corrente_ac3_A} A`, '1', `R$ ${contator.preco.toFixed(2)}`, `R$ ${contator.preco.toFixed(2)}`
+            ]);
+        }
+    });
+
+    // 2. Filtra e agrupa Fontes e Contatores Auxiliares
+    const otherComponents = appState.cart.filter(item => item.tipo === 'fonte' || item.tipo === 'contator-auxiliar');
+    if (otherComponents.length > 0) {
+        // Adiciona um separador
+        if (appState.motors.length > 0) {
+            body.push([{ content: '', colSpan: 9, styles: { fillColor: '#ffffff', minCellHeight: 3, cellPadding: 0, lineWidth: 0 } }]);
+        }
+
+        // Adiciona o cabeçalho do novo grupo
+        body.push([{ content: 'Fontes e Componentes Auxiliares', colSpan: 9, styles: groupHeaderStyles }]);
+        
+        otherComponents.forEach(item => {
+            const total = item.preco * item.quantity;
+            grandTotal += total;
+            
+            let tensaoEntradaStr = item.tensao_comando || '';
+            if (item.tensao_entrada) {
+                tensaoEntradaStr = typeof item.tensao_entrada === 'string' ? item.tensao_entrada : (item.tensao_entrada.AC || '') + (item.tensao_entrada.DC ? ` / ${item.tensao_entrada.DC}` : '');
+            }
+
+            const tensaoSaidaMatch = item.descricao?.match(/(\d+\s*V\s*DC)/);
+            const tensaoSaidaStr = tensaoSaidaMatch ? tensaoSaidaMatch[1] : '';
+
+            body.push([
+                item.codigo, item.nome, '', tensaoEntradaStr, tensaoSaidaStr,
+                item.corrente_saida?.total || '',
+                item.quantity, `R$ ${item.preco.toFixed(2)}`, `R$ ${total.toFixed(2)}`
+            ]);
         });
     }
-    
-    if(appState.cart.length > 0) {
-        content += `OUTROS COMPONENTES:\n${'='.repeat(60)}\n`;
-        appState.cart.forEach(item => {
-            content += `${item.nome}\n`;
-            content += `  Código: ${item.codigo}\n`;
-            content += `  Quantidade: ${item.quantity}\n`;
-            content += `  Preço Unit.: R$ ${item.preco.toFixed(2)}\n`;
-            content += `  Subtotal: R$ ${(item.preco * item.quantity).toFixed(2)}\n\n`;
-        });
-    }
 
-    content += `\nTOTAL GERAL DO PAINEL: R$ ${total.toFixed(2)}\n`;
+    // 3. Adiciona a linha de TOTAL GERAL
+    body.push([
+        { content: 'TOTAL GERAL', colSpan: 8, styles: { halign: 'right', fontStyle: 'bold', fillColor: '#e0e0e0' } },
+        { content: `R$ ${grandTotal.toFixed(2)}`, styles: { fontStyle: 'bold', fillColor: '#e0e0e0', halign: 'right' } }
+    ]);
 
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `painel_eletrico_${Date.now()}.txt`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    // Gera a tabela
+    doc.autoTable({
+        head: head,
+        body: body,
+        startY: 50,
+        theme: 'grid',
+        headStyles: { fillColor: [41, 128, 186], textColor: 255 },
+        columnStyles: {
+            0: { cellWidth: 30 }, 1: { cellWidth: 'auto' }, 2: { cellWidth: 15 },
+            3: { cellWidth: 20 }, 4: { cellWidth: 20 }, 5: { cellWidth: 20 },
+            6: { cellWidth: 12, halign: 'center' }, 7: { cellWidth: 22, halign: 'right' },
+            8: { cellWidth: 22, halign: 'right' },
+        },
+        didDrawPage: addPageFooter
+    });
 
-    showNotification('Lista exportada com sucesso!');
+    // Salva o PDF
+    doc.save(`lista_componentes_${Date.now()}.pdf`);
+    showNotification('PDF final exportado com sucesso!');
 }
 
+// --- NOVA FUNÇÃO PARA EXPORTAR PARA EXCEL ---
+function exportToExcel() {
+    const incompleteMotors = appState.motors.filter(m => !m.disjuntor || !m.contator);
+    if (incompleteMotors.length > 0) {
+        showNotification(`Existem motores com componentes pendentes: ${incompleteMotors.map(m => m.name).join(', ')}`, 'danger');
+        return;
+    }
+
+    if (appState.motors.length === 0 && appState.cart.length === 0) {
+        showNotification('O painel está vazio!', 'warning');
+        return;
+    }
+
+    let grandTotal = 0;
+    const data = [];
+
+    // Define o cabeçalho
+    const header = ['Item', 'Descrição', 'Potência', 'Tensão Entrada', 'Tensão Saída', 'Corrente (A)', 'Qtd.', 'Preço Unit.', 'Total'];
+    data.push(header);
+
+    // Processa os motores e seus componentes
+    appState.motors.forEach(motor => {
+        const motorTotal = (motor.disjuntor?.preco || 0) + (motor.contator?.preco || 0);
+        grandTotal += motorTotal;
+
+        // Adiciona uma linha em branco para separar os grupos de motor
+        if (data.length > 1) {
+            data.push([]); 
+        }
+
+        // Linha do Motor
+        data.push([
+            motor.name,
+            `Motor ${appState.voltageType}`,
+            `${motor.power} CV`,
+            `${appState.voltage}V`,
+            '', // Tensão Saída para o motor
+            `${motor.current} A`,
+            1,
+            '', // Preço unitário do grupo não é relevante no Excel
+            motorTotal
+        ]);
+
+        // Linhas dos componentes dependentes
+        if (motor.disjuntor) {
+            data.push([
+                motor.disjuntor.codigo, motor.disjuntor.nome, '', `${appState.voltage}V`, '', `${motor.disjuntor.faixa_ajuste_A} A`, 1, motor.disjuntor.preco, motor.disjuntor.preco
+            ]);
+        }
+        if (motor.contator) {
+            data.push([
+                motor.contator.codigo, motor.contator.nome, '', `${appState.voltage}V`, '', `${motor.contator.corrente_ac3_A} A`, 1, motor.contator.preco, motor.contator.preco
+            ]);
+        }
+    });
+
+    // Filtra e agrupa Fontes e Contatores Auxiliares
+    const otherComponents = appState.cart.filter(item => item.tipo === 'fonte' || item.tipo === 'contator-auxiliar');
+    if (otherComponents.length > 0) {
+        // Adiciona um separador
+        if (appState.motors.length > 0) {
+            data.push([]); // Linha em branco
+        }
+        
+        // Cabeçalho do grupo
+        data.push(['Fontes e Componentes Auxiliares']);
+
+        otherComponents.forEach(item => {
+            const total = item.preco * item.quantity;
+            grandTotal += total;
+
+            let tensaoEntradaStr = item.tensao_comando || '';
+            if (item.tensao_entrada) {
+                tensaoEntradaStr = typeof item.tensao_entrada === 'string' ? item.tensao_entrada : (item.tensao_entrada.AC || '') + (item.tensao_entrada.DC ? ` / ${item.tensao_entrada.DC}` : '');
+            }
+            const tensaoSaidaMatch = item.descricao?.match(/(\d+\s*V\s*DC)/);
+            const tensaoSaidaStr = tensaoSaidaMatch ? tensaoSaidaMatch[1] : '';
+
+            data.push([
+                item.codigo, item.nome, '', tensaoEntradaStr, tensaoSaidaStr,
+                item.corrente_saida?.total || '',
+                item.quantity, item.preco, total
+            ]);
+        });
+    }
+
+    // Adiciona a linha de TOTAL GERAL
+    data.push([]); // Linha em branco
+    data.push(['', '', '', '', '', '', '', 'TOTAL GERAL', grandTotal]);
+
+    // Cria a planilha e o arquivo
+    const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+    // Formatação de colunas (largura e formato de moeda)
+    worksheet['!cols'] = [
+        { wch: 25 }, { wch: 40 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, 
+        { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 15 }
+    ];
+
+    // Aplica o formato de moeda nas colunas H (Preço Unit.) e I (Total)
+    for (let i = 2; i <= data.length; i++) {
+        if (worksheet[`H${i}`]) worksheet[`H${i}`].z = 'R$ #,##0.00';
+        if (worksheet[`I${i}`]) worksheet[`I${i}`].z = 'R$ #,##0.00';
+    }
+    // Formata o total geral
+    worksheet[`I${data.length}`].z = 'R$ #,##0.00';
+
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Lista de Componentes");
+
+    // Gera e baixa o arquivo
+    XLSX.writeFile(workbook, `lista_componentes_${Date.now()}.xlsx`);
+    
+    showNotification('Excel exportado com sucesso!');
+}
 
 // --- Funções de Renderização e Filtros (sem grandes alterações) ---
 function updateProjectSummary() {
