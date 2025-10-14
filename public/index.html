@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Dimensionamento de Painéis Elétricos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/webp" href="/static/favicon.webp">
+</head>
+
+<body class="container">
+
+    <div class="header">
+        <div class="logo-container">
+            <img src="/static/favicon.webp" alt="">
+            <h1 id="logo">
+                Acqua<span>No</span><span>bi</span><span>lis</span>
+            </h1>                
+        </div>
+    </div>2
+    <div class="main-content">
+        <div class="left-panel">
+            <!-- Configuração do Projeto -->
+            <div class="section">
+                <h2 class="section-title">📋 Configuração do Projeto</h2>
+
+                <div class="form-group">
+                    <label>Tipo de Alimentação:</label>
+                    <div class="voltage-type-selector">
+                        <label>
+                            <input type="radio" name="voltageType" value="monofasica" checked>
+                            Monofásica
+                        </label>
+                        <label>
+                            <input type="radio" name="voltageType" value="bifasica">
+                            Bifásica
+                        </label>
+                        <label>
+                            <input type="radio" name="voltageType" value="trifasica">
+                            Trifásica
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="voltage">Tensão de Alimentação (V):</label>
+                    <input type="number" id="voltage" min="100" max="480" value="220" step="10">
+                </div>
+
+                <div class="form-group motor-input-group">
+                    <label>Adicionar Motor:</label>
+                    <div class="motor-input-container">
+                        <div class="motor-field">
+                            <input type="text" id="motorName" placeholder="Nome do motor (opcional)" maxlength="30">
+                        </div>
+                        <div class="motor-field">
+                            <input type="number" id="motorPower" min="0.5" max="500" step="0.5" placeholder="Potência (CV)">
+                        </div>
+                        <button class="btn btn-primary" onclick="addMotor()">Adicionar</button>
+                    </div>
+                </div>
+
+                <div class="motor-list" id="motorList">
+                    <!-- Motores serão listados aqui -->
+                </div>
+            </div>
+
+            <!-- Resumo do Projeto -->
+            <div class="section">
+                <h2 class="section-title">📊 Resumo do Projeto</h2>
+                <div id="projectSummary">
+                    <p><strong>Tipo:</strong> <span id="summaryType">Monofásica</span></p>
+                    <p><strong>Tensão:</strong> <span id="summaryVoltage">220V</span></p>
+                    <p><strong>Total de Motores:</strong> <span id="summaryMotors">0</span></p>
+                    <p><strong>Potência Total:</strong> <span id="summaryPower">0 CV</span></p>
+                </div>
+            </div>
+
+            <!-- Carrinho -->
+            <div class="cart">
+                <div class="cart-title">
+                    🛒 Painel Selecionado
+                    <span class="badge" id="cartCount">0</span>
+                </div>
+                <div id="cartItems">
+                    <div class="empty-state">
+                        Nenhum componente selecionado
+                    </div>
+                </div>
+                <div class="cart-total" style="display: none;" id="cartTotal">
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">R$ 0,00</span>
+                    </div>
+                    <div class="total-row grand-total">
+                        <span>Total:</span>
+                        <span id="grandTotal">R$ 0,00</span>
+                    </div>
+                </div>
+                <div class="export-buttons">
+                    <button class="btn btn-primary" onclick="exportList()">📄 Exportar Lista</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <!-- Busca -->
+             <div class="search-add-bar">
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Buscar por código ou descrição...">
+        <span class="search-icon">🔍</span>
+    </div>
+    <a href="/adicionar-produto.html" class="btn btn-secondary">Adicionar Item</a>
+</div>
+
+            <!-- Tabs de Categorias -->
+            <div class="tabs">
+                <button class="tab active" data-category="fontes">Fontes de Alimentação</button>
+                <button class="tab" data-category="disjuntores">Disjuntores</button>
+                <button class="tab" data-category="contatores-potencia">Contatores de Potência</button>
+                <button class="tab" data-category="contatores-auxiliares">Contatores Auxiliares</button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filters" id="filters">
+                <div class="filter-group compatibility-filter">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="hideIncompatible">
+                        Ocultar itens incompatíveis com todos os motores
+                    </label>
+                </div>
+                <!-- Filtros dinâmicos serão inseridos aqui -->
+            </div>
+
+            <!-- Grid de Produtos -->
+            <div class="products-grid" id="productsGrid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando produtos...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script src="app.js"></script></html>

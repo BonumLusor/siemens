@@ -1,0 +1,92 @@
+{
+  "contatores_auxiliares": [
+    {
+      "grupo": "Contatores auxiliares SIRIUS - 3RH2",
+      "descricao_grupo": "Operação em circuitos de comando, controle, interface e sinalização. Os contatores auxiliares 3RH2 possuem 4 polos, podendo ser expandidos até 8. Disponíveis com terminais de conexão tipo mola ou parafuso.",
+      "produtos": [
+        {
+          "nome": "Contator Auxiliar 4NA",
+          "variacoes": [
+            {
+              "codigo": "3RH2140-2AN20",
+              "tensao_comando": "220 V/50-60 Hz",
+              "tipo_conexao": "Mola",
+              "preco": 60.12
+            },
+            {
+              "codigo": "3RH2140-2BB40",
+              "tensao_comando": "24 VCC",
+              "tipo_conexao": "Mola",
+              "preco": 94.45
+            }
+          ]
+        },
+        {
+          "nome": "Contator Auxiliar 3NA + 1NF",
+          "variacoes": [
+            {
+              "codigo": "3RH2131-2AN20",
+              "tensao_comando": "220 V/50-60 Hz",
+              "tipo_conexao": "Mola",
+              "preco": 60.12
+            },
+            {
+              "codigo": "3RH2131-2BB40",
+              "tensao_comando": "24 VCC",
+              "tipo_conexao": "Mola",
+              "preco": 94.45
+            }
+          ]
+        },
+        {
+          "nome": "Contator Auxiliar 2NA + 2NF",
+          "variacoes": [
+            {
+              "codigo": "3RH2122-2AN20",
+              "tensao_comando": "220 V/50-60 Hz",
+              "tipo_conexao": "Mola",
+              "preco": 60.12
+            },
+            {
+              "codigo": "3RH2122-2BB40",
+              "tensao_comando": "24 VCC",
+              "tipo_conexao": "Mola",
+              "preco": 94.45
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "grupo": "Acessórios para Contatores Auxiliares SIRIUS 3RH2",
+      "descricao_grupo": "Acessórios para expansão de funcionalidade e proteção dos contatores auxiliares da linha 3RH2.",
+      "produtos": [
+        {
+          "nome": "Blocos aditivos de contatos auxiliares",
+          "variacoes": [
+            { "codigo": "3RH2911-2HA22", "descricao": "2 NA + 2 NF", "preco": 42.29 },
+            { "codigo": "3RH2911-2HA31", "descricao": "3 NA + 1 NF", "preco": 42.29 },
+            { "codigo": "3RH2911-2HA13", "descricao": "1 NA + 3 NF", "preco": 42.29 },
+            { "codigo": "3RH2911-2FA40", "descricao": "4 NA", "preco": 42.29},
+            { "codigo": "3RH2911-2FA04", "descricao": "4 NF", "preco": 42.29 },
+            { "codigo": "3RH2911-2HA11", "descricao": "1 NA + 1 NF", "preco": 42.29 },
+            { "codigo": "3RH2911-2HA20", "descricao": "2 NA", "preco": 23.51 },
+            { "codigo": "3RH2911-2HA02", "descricao": "2 NF", "preco": 23.51 },
+            { "codigo": "3RH2911-2HA10", "descricao": "1 NA", "preco": 14.46 },
+            { "codigo": "3RH2911-2HA01", "descricao": "1 NF", "preco": 15.04 }
+          ]
+        },
+        {
+          "nome": "Supressores de sobretensão",
+          "variacoes": [
+            { "codigo": "3RT2916-1BB00", "tipo": "Varistor", "tensao": "CA 24 a 48 V / CC 24 a 70 V", "preco": 30.54 },
+            { "codigo": "3RT2916-1BC00", "tipo": "Varistor", "tensao": "CA 48 a 127 V / CC 70 a 150 V", "preco": 30.54 },
+            { "codigo": "3RT2916-1BD00", "tipo": "Varistor", "tensao": "CA 127 a 240 V / CC 150 a 250 V", "preco":  33.58 },
+            { "codigo": "3RT2916-1DG00", "tipo": "Diodo limitador", "tensao": "CC 12 a 250 V", "preco": 29.08},
+            { "codigo": "3RT2916-1EH00", "tipo": "Combinação Diodos", "tensao": "CC 12 a 250 V", "preco": 35.43 }
+          ]
+        }
+      ]
+    }
+  ]
+}

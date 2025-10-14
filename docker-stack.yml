@@ -1,0 +1,65 @@
+services:
+  web:
+    image: nginx # Define a imagem do serviço web como Nginx
+    volumes:
+    - ./public:/usr/share/nginx/html # Monta o diretório public como raiz do servidor web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.siemens.rule=Host(`siemens.portalnobilis.com.br`)"
+      - "traefik.http.routers.siemens.entrypoints=websecure"
+      - "traefik.http.routers.siemens.tls=true"
+      - "traefik.http.routers.siemens.tls.certresolver=myresolver"
+    networks:
+    - proxy
+
+  api:
+    image: node:20-alpine # Imagem oficial do Node.js, leve e segura
+    working_dir: /usr/src/app # Define o diretório de trabalho dentro do contêiner
+    volumes:
+      - ./api:/usr/src/app # Monta o código da sua API para dentro do contêiner
+    command: sh -c "npm install && node index.js" # Comando para instalar as dependências e iniciar o servidor
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      # Roteador para a API
+      - "traefik.http.routers.siemensPortalApi.rule=Host(`siemens.portalnobilis.com.br`) && PathPrefix(`/api`)" # <- Novo subdomínio para a API
+      - "traefik.http.routers.siemensPortalApi.entrypoints=websecure"
+      - "traefik.http.routers.siemensPortalApi.service=siemensPortalApi-svc"
+      - "traefik.http.routers.siemensPortalApi.tls=true"
+      - "traefik.http.routers.siemensPortalApi.tls.certresolver=myresolver"
+      # Define a prioridade do roteador
+      - "traefik.http.routers.siemensPortalApi.priority=70"
+      # Serviço que aponta para a porta interna da API
+      - "traefik.http.services.siemensPortalApi-svc.loadbalancer.server.port=3000"  
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=siemens_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=senha # Troque por uma senha segura
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      # --- Roteador TCP ---
+      - "traefik.tcp.routers.portaldb.rule=HostSNI(`db.portalnobilis.com.br`)"
+      - "traefik.tcp.routers.portaldb.entrypoints=websecure"
+      - "traefik.tcp.routers.portaldb.service=portaldb-svc"
+      # --- Habilitar TLS para a conexão ---
+      - "traefik.tcp.routers.portaldb.tls=true"
+      - "traefik.tcp.routers.portaldb.tls.certresolver=myresolver"
+      # --- Serviço TCP ---
+      - "traefik.tcp.services.portaldb-svc.loadbalancer.server.port=5432"
+networks:
+  proxy:
+    external: true
+    driver: overlay
+
+volumes:
+  public:
+  postgres_data:
+
