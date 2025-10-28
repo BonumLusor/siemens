@@ -11,6 +11,11 @@ services:
       - "traefik.http.routers.siemens.tls.certresolver=myresolver"
     networks:
     - proxy
+    deploy:
+      placement:
+        constraints:
+          # Restringe a execução deste serviço APENAS ao nó com o ID especificado.
+          - "node.id == 9kjo5azw0w66vlsrwym5csbey" 
 
   api:
     image: node:20-alpine # Imagem oficial do Node.js, leve e segura
@@ -23,7 +28,7 @@ services:
     labels:
       - "traefik.enable=true"
       # Roteador para a API
-      - "traefik.http.routers.siemensPortalApi.rule=Host(`siemens.portalnobilis.com.br`) && PathPrefix(`/api`)" # <- Novo subdomínio para a API
+      - "traefik.http.routers.siemensPortalApi.rule=Host(`siemens.portalnobilis.com.br`) && PathPrefix(`/api`)"
       - "traefik.http.routers.siemensPortalApi.entrypoints=websecure"
       - "traefik.http.routers.siemensPortalApi.service=siemensPortalApi-svc"
       - "traefik.http.routers.siemensPortalApi.tls=true"
@@ -32,6 +37,11 @@ services:
       - "traefik.http.routers.siemensPortalApi.priority=70"
       # Serviço que aponta para a porta interna da API
       - "traefik.http.services.siemensPortalApi-svc.loadbalancer.server.port=3000"  
+    deploy:
+      placement:
+        constraints:
+          # Restringe a execução deste serviço APENAS ao nó com o ID especificado.
+          - "node.id == 9kjo5azw0w66vlsrwym5csbey" 
 
   postgres:
     image: postgres:16-alpine
@@ -54,6 +64,11 @@ services:
       - "traefik.tcp.routers.portaldb.tls.certresolver=myresolver"
       # --- Serviço TCP ---
       - "traefik.tcp.services.portaldb-svc.loadbalancer.server.port=5432"
+    deploy:
+      placement:
+        constraints:
+          # Restringe a execução deste serviço APENAS ao nó com o ID especificado.
+          - "node.id == 9kjo5azw0w66vlsrwym5csbey" 
 networks:
   proxy:
     external: true

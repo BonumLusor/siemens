@@ -13,12 +13,12 @@
 
     <div class="header">
         <div class="logo-container">
-            <img src="/static/favicon.webp" alt="">
+            <img src="/static/favicon.webp" alt="Logo">
             <h1 id="logo">
                 Acqua<span>No</span><span>bi</span><span>lis</span>
             </h1>                
         </div>
-    </div>2
+    </div>
     <div class="main-content">
         <div class="left-panel">
             <!-- Configuração do Projeto -->
@@ -100,7 +100,6 @@
                 </div>
                 <div class="export-buttons">
                     <button class="btn btn-primary" onclick="exportList()">📄 Exportar Lista</button>
-
                     <button class="btn btn-primary" onclick="exportToExcel()">📊 Exportar Excel</button>
                 </div>
             </div>
@@ -109,29 +108,20 @@
         <div class="right-panel">
             <!-- Busca -->
              <div class="search-add-bar">
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Buscar por código ou descrição...">
-        <span class="search-icon">🔍</span>
-    </div>
-    <a href="/adicionar-produto.html" class="btn btn-secondary">Adicionar Item</a>
-</div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Buscar por código ou descrição...">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <a href="/adicionar-produto.html" class="btn btn-secondary">Adicionar Item</a>
+            </div>
 
-            <!-- Tabs de Categorias -->
-            <div class="tabs">
-                <button class="tab active" data-category="fontes">Fontes de Alimentação</button>
-                <button class="tab" data-category="disjuntores">Disjuntores</button>
-                <button class="tab" data-category="contatores-potencia">Contatores de Potência</button>
-                <button class="tab" data-category="contatores-auxiliares">Contatores Auxiliares</button>
+            <!-- Tabs de Grupos (será preenchido pelo JS) -->
+            <div class="tabs" id="tabs-container">
+                <!-- Abas dinâmicas serão inseridas aqui -->
             </div>
 
             <!-- Filtros -->
             <div class="filters" id="filters">
-                <div class="filter-group compatibility-filter">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="hideIncompatible">
-                        Ocultar itens incompatíveis com todos os motores
-                    </label>
-                </div>
                 <!-- Filtros dinâmicos serão inseridos aqui -->
             </div>
 
@@ -139,7 +129,7 @@
             <div class="products-grid" id="productsGrid">
                 <div class="loading">
                     <div class="spinner"></div>
-                    <p>Carregando produtos...</p>
+                    <p>Carregando...</p>
                 </div>
             </div>
         </div>
@@ -150,4 +140,5 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<script src="app.js"></script></html>
+<script src="app.js"></script>
+</html>

@@ -1,379 +1,106 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adicionar Novo Componente</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body class="container" style="overflow: auto !important;">
     <div class="header">
-        <div class="logo-container">
-            <h1 id="logo">
-                Acqua<span>No</span><span>bi</span><span>lis</span>
-            </h1>
-        </div>
+        <a href="/" style="text-decoration: none; color: white;">
+            <div class="logo-container">
+                 <h1 id="logo">Acqua<span>No</span><span>bi</span><span>lis</span></h1>
+            </div>
+        </a>
         <p>➕ Adicionar Novo Componente</p>
     </div>
 
     <div class="form-container">
         <form id="componentForm">
-            <!-- Informações Básicas -->
+            <!-- GRUPO -->
             <div class="section">
-                <h2 class="section-title">📋 Informações Básicas</h2>
-
+                <h2 class="section-title">1. Grupo do Produto</h2>
                 <div class="form-group">
-                    <label for="category">Categoria <span class="required">*</span></label>
-                    <select id="category" name="category" required>
-                        <option value="">Selecione uma categoria</option>
-                        <option value="fontes">Fontes de Alimentação</option>
-                        <option value="disjuntores">Disjuntores</option>
-                        <option value="contatores-potencia">Contatores de Potência</option>
-                        <option value="contatores-auxiliares">Contatores Auxiliares</option>
+                    <label for="groupSelection">O item pertence a um grupo existente ou a um novo?</label>
+                    <select id="groupSelection" name="groupSelection">
+                        <option value="existente">Grupo Existente</option>
+                        <option value="novo">Novo Grupo</option>
                     </select>
                 </div>
 
-                <div class="form-row">
+                <div id="existing-group-section">
                     <div class="form-group">
-                        <label for="grupo">Grupo/Família <span class="required">*</span></label>
-                        <input type="text" id="grupo" name="grupo" required placeholder="Ex: SITOP PSU8600">
-                    </div>
-                    <div class="form-group">
-                        <label for="nome">Nome do Produto <span class="required">*</span></label>
-                        <input type="text" id="nome" name="nome" required placeholder="Ex: PSU8600 1 AC Unidade Básica">
+                        <label for="group">Selecione o Grupo <span class="required">*</span></label>
+                        <select id="group" name="group" required>
+                            <!-- Opções carregadas dinamicamente -->
+                        </select>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="descricao_grupo">Descrição do Grupo</label>
-                    <textarea id="descricao_grupo" name="descricao_grupo"
-                        placeholder="Descrição detalhada da família de produtos..."></textarea>
+                <div id="new-group-section" style="display: none;">
+                    <div class="form-group">
+                        <label for="new_group_name">Nome do Novo Grupo <span class="required">*</span></label>
+                        <input type="text" id="new_group_name" name="new_group_name" placeholder="Ex: Inversores de Frequência">
+                    </div>
                 </div>
             </div>
-
-            <!-- Variações do Produto -->
+            
+            <!-- CATEGORIA E PRODUTO -->
             <div class="section">
-                <h2 class="section-title">🔧 Variações do Produto</h2>
-                <div id="variacoes-container">
-                    <!-- Variações serão adicionadas dinamicamente -->
+                <h2 class="section-title">2. Categoria e Produto</h2>
+                <div class="form-group">
+                    <label for="categoria_nome">Nome da Categoria/Família <span class="required">*</span></label>
+                    <input type="text" id="categoria_nome" name="categoria_nome" required placeholder="Ex: SIRIUS 3RW40">
                 </div>
-                <button type="button" class="btn add-variation-btn" onclick="addVariation()">
-                    ➕ Adicionar Variação
-                </button>
-            </div>
-
-            <!-- Campos específicos por categoria -->
-
-            <!-- Campos para Fontes -->
-            <div id="fontes-fields" class="category-fields">
-                <div class="section">
-                    <h2 class="section-title">⚡ Especificações de Fonte</h2>
-                    <div class="help-text">Estes campos serão aplicados a todas as variações. Valores específicos podem
-                        ser editados em cada variação.</div>
+                 <div class="form-group">
+                    <label for="categoria_descricao">Descrição da Categoria (Opcional)</label>
+                    <textarea id="categoria_descricao" name="categoria_descricao" rows="3" placeholder="Descrição detalhada da família de produtos..."></textarea>
                 </div>
-            </div>
-
-            <!-- Campos para Disjuntores -->
-            <div id="disjuntores-fields" class="category-fields">
-                <div class="section">
-                    <h2 class="section-title">🔌 Especificações de Disjuntor</h2>
-                    <div class="help-text">Campos específicos para disjuntores motores.</div>
+                <div class="form-group">
+                    <label>Dependências da Categoria:</label>
+                    <div class="checkbox-label" style="padding-bottom: 10px;">
+                        <input type="checkbox" id="dependente_motor" name="dependente_motor">
+                        A compatibilidade depende da corrente do motor (Ex: Disjuntores)
+                    </div>
+                     <div class="checkbox-label">
+                        <input type="checkbox" id="dependente_tensao" name="dependente_tensao">
+                        A compatibilidade depende da tensão da rede (Ex: Fontes)
+                    </div>
                 </div>
-            </div>
-
-            <!-- Campos para Contatores de Potência -->
-            <div id="contatores-potencia-fields" class="category-fields">
-                <div class="section">
-                    <h2 class="section-title">⚙️ Especificações de Contator de Potência</h2>
-                    <div class="help-text">Campos específicos para contatores de potência.</div>
+                <hr style="margin: 20px 0;">
+                <div class="form-group">
+                    <label for="produto_nome">Nome do Produto <span class="required">*</span></label>
+                    <input type="text" id="produto_nome" name="produto_nome" required placeholder="Ex: Soft Starter 200-480V 25A">
                 </div>
             </div>
 
-            <!-- Campos para Contatores Auxiliares -->
-            <div id="contatores-auxiliares-fields" class="category-fields">
-                <div class="section">
-                    <h2 class="section-title">🔗 Especificações de Contator Auxiliar</h2>
-                    <div class="help-text">Campos específicos para contatores auxiliares.</div>
+            <!-- VARIAÇÃO -->
+            <div class="section">
+                <h2 class="section-title">3. Variação do Produto</h2>
+                 <div class="form-row">
+                    <div class="form-group">
+                        <label for="variacao_codigo">Código da Variação <span class="required">*</span></label>
+                        <input type="text" id="variacao_codigo" name="variacao_codigo" required placeholder="Ex: 3RW4026-1BB14">
+                    </div>
+                    <div class="form-group">
+                        <label for="variacao_preco">Preço (R$) <span class="required">*</span></label>
+                        <input type="number" id="variacao_preco" name="variacao_preco" step="0.01" required placeholder="1234.56">
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label for="variacao_detalhes">Outros Detalhes da Variação (JSON)</label>
+                    <textarea id="variacao_detalhes" name="variacao_detalhes" rows="4" placeholder='{ "descricao": "24 V DC/20 A/4 x 5 A", "dimensoes": "125x125x150" }'></textarea>
                 </div>
             </div>
 
-            <!-- Ações do Formulário -->
             <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick="window.history.back()">
-                    ← Voltar
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="previewJSON()">
-                    👁️ Visualizar JSON
-                </button>
-                <button type="submit" class="btn btn-success">
-                    💾 Salvar Componente
-                </button>
+                <a href="/" class="btn btn-secondary">← Voltar</a>
+                <button type="submit" class="btn btn-success">💾 Salvar Componente</button>
             </div>
         </form>
     </div>
+
+    <script src="adicionar-produto.js"></script>
 </body>
-
-<!-- Modal para Preview do JSON -->
-<div id="jsonModal"
-    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">
-    <div
-        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; max-width: 80%; max-height: 80%; overflow: auto; min-width: 50rem; min-height: 50rem;">
-        <h3>Preview do JSON</h3>
-        <pre id="jsonPreview"
-            style="background: #f5f5f5; padding: 15px; border-radius: 4px; overflow: auto; max-height: 400px;"></pre>
-        <div style="margin-top: 15px; text-align: right;">
-            <button type="button" class="btn btn-secondary" onclick="closeModal()">Fechar</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    let variationCount = 0;
-
-    // Configuração de campos por categoria
-    const categoryConfigs = {
-        'fontes': {
-            fields: ['tensao_entrada', 'corrente_saida', 'dimensoes'],
-            templates: {
-                tensao_entrada: 'text',
-                corrente_saida: 'text',
-                dimensoes: 'text'
-            }
-        },
-        'disjuntores': {
-            fields: ['faixa_ajuste_A'],
-            templates: {
-                faixa_ajuste_A: 'text'
-            }
-        },
-        'contatores-potencia': {
-            fields: ['corrente_ac3_A', 'corrente_ac1_A', 'dimensoes_mm', 'potencia_motor_cv_kw'],
-            templates: {
-                corrente_ac3_A: 'number',
-                corrente_ac1_A: 'number',
-                dimensoes_mm: 'text',
-                potencia_motor_cv_kw: 'text'
-            }
-        },
-        'contatores-auxiliares': {
-            fields: ['tensao_comando', 'tipo_conexao'],
-            templates: {
-                tensao_comando: 'text',
-                tipo_conexao: 'text'
-            }
-        }
-    };
-
-    // Event listener para mudança de categoria
-    document.getElementById('category').addEventListener('change', function () {
-        // Ocultar todos os campos específicos
-        document.querySelectorAll('.category-fields').forEach(field => {
-            field.classList.remove('active');
-        });
-
-        // Mostrar campos da categoria selecionada
-        const selectedCategory = this.value;
-        if (selectedCategory) {
-            const categoryField = document.getElementById(selectedCategory + '-fields');
-            if (categoryField) {
-                categoryField.classList.add('active');
-            }
-        }
-
-        // Limpar variações existentes ao mudar categoria
-        document.getElementById('variacoes-container').innerHTML = '';
-        variationCount = 0;
-
-        // Adicionar primeira variação automaticamente
-        if (selectedCategory) {
-            addVariation();
-        }
-    });
-
-    function addVariation() {
-        const category = document.getElementById('category').value;
-        if (!category) {
-            showNotification('Selecione uma categoria primeiro!', 'error');
-            return;
-        }
-
-        const config = categoryConfigs[category];
-        const container = document.getElementById('variacoes-container');
-        const variationId = ++variationCount;
-
-        let fieldsHTML = '';
-
-        // Campos básicos para todas as variações
-        fieldsHTML += `
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Código <span class="required">*</span></label>
-                        <input type="text" name="variacao_${variationId}_codigo" required 
-                               placeholder="Ex: 6EP3336-8MB00-2CY0">
-                    </div>
-                    <div class="form-group">
-                        <label>Descrição <span class="required">*</span></label>
-                        <input type="text" name="variacao_${variationId}_descricao" required 
-                               placeholder="Ex: 24 V DC/20 A/4 x 5 A">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group half">
-                        <label>Preço (R$) <span class="required">*</span></label>
-                        <input type="number" name="variacao_${variationId}_preco" step="0.01" required 1
-                               placeholder="0.00">
-                    </div>
-                </div>
-            `;
-
-        // Campos específicos da categoria
-        if (config) {
-            config.fields.forEach(field => {
-                const inputType = config.templates[field] || 'text';
-                const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-                fieldsHTML += `
-                        <div class="form-group">
-                            <label>${fieldName}</label>
-                            <input type="${inputType}" name="variacao_${variationId}_${field}" 
-                                   placeholder="${getPlaceholder(field)}">
-                        </div>
-                    `;
-            });
-        }
-
-        const variationHTML = `
-                <div class="variation-item" id="variation-${variationId}">
-                    <button type="button" class="remove-variation" onclick="removeVariation(${variationId})">×</button>
-                    <h4 style="margin-bottom: 15px; color: var(--primary);">Variação ${variationId}</h4>
-                    ${fieldsHTML}
-                </div>
-            `;
-
-        container.insertAdjacentHTML('beforeend', variationHTML);
-    }
-
-    function removeVariation(id) {
-        const element = document.getElementById(`variation-${id}`);
-        if (element) {
-            element.remove();
-        }
-    }
-
-    function getPlaceholder(field) {
-        const placeholders = {
-            'tensao_entrada': '100 ... 240 V AC',
-            'corrente_saida': '20 A',
-            'dimensoes': '125 x 125 x 150',
-            'faixa_ajuste_A': '4,5-6,3',
-            'corrente_ac3_A': '18',
-            'corrente_ac1_A': '32',
-            'dimensoes_mm': '45 x 74.4 x 81.8',
-            'potencia_motor_cv_kw': '5/3,7',
-            'tensao_comando': '220 V/50-60 Hz',
-            'tipo_conexao': 'Mola'
-        };
-        return placeholders[field] || '';
-    }
-
-    function previewJSON() {
-        const formData = new FormData(document.getElementById('componentForm'));
-        const componentData = buildComponentObject(formData);
-
-        document.getElementById('jsonPreview').textContent = JSON.stringify(componentData, null, 2);
-        document.getElementById('jsonModal').style.display = 'block';
-    }
-
-    function closeModal() {
-        document.getElementById('jsonModal').style.display = 'none';
-    }
-
-    function buildComponentObject(formData) {
-        const category = formData.get('category');
-        const grupo = formData.get('grupo');
-        const nome = formData.get('nome');
-        const descricao_grupo = formData.get('descricao_grupo');
-
-        // Coletar variações
-        const variacoes = [];
-        const variationElements = document.querySelectorAll('.variation-item');
-
-        variationElements.forEach((element, index) => {
-            const variationId = element.id.split('-')[1];
-            const variacao = {
-                codigo: formData.get(`variacao_${variationId}_codigo`),
-                descricao: formData.get(`variacao_${variationId}_descricao`),
-                preco: parseFloat(formData.get(`variacao_${variationId}_preco`))
-            };
-
-            // Adicionar campos específicos da categoria
-            const config = categoryConfigs[category];
-            if (config) {
-                config.fields.forEach(field => {
-                    const value = formData.get(`variacao_${variationId}_${field}`);
-                    if (value) {
-                        if (field.includes('corrente') && field.includes('_A')) {
-                            variacao[field] = parseFloat(value);
-                        } else {
-                            variacao[field] = value;
-                        }
-                    }
-                });
-            }
-
-            variacoes.push(variacao);
-        });
-
-        return {
-            grupo: grupo,
-            descricao_grupo: descricao_grupo,
-            produtos: [{
-                nome: nome,
-                variacoes: variacoes
-            }]
-        };
-    }
-
-    function showNotification(message, type = 'success') {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
-    }
-
-    // Event listener para submissão do formulário
-    document.getElementById('componentForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-        const componentData = buildComponentObject(formData);
-
-        // Simular salvamento (aqui você integraria com sua API)
-        console.log('Dados do componente:', componentData);
-
-        showNotification('Componente salvo com sucesso!', 'success');
-
-        // Opcional: resetar formulário
-        setTimeout(() => {
-            this.reset();
-            document.getElementById('variacoes-container').innerHTML = '';
-            variationCount = 0;
-            document.querySelectorAll('.category-fields').forEach(field => {
-                field.classList.remove('active');
-            });
-        }, 1500);
-    });
-
-    // Adicionar primeira variação quando carregar a página
-    document.addEventListener('DOMContentLoaded', function () {
-        // Opcional: pode adicionar uma variação inicial aqui se desejar
-    });
-</script>
-
 </html>
