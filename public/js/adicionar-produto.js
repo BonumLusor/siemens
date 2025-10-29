@@ -19,9 +19,10 @@ async function loadGroups() {
         groupSelect.innerHTML = '<option value="">Selecione um grupo...</option>';
         grupos.forEach(grupo => {
             const option = document.createElement('option');
-            // IMPORTANTE: O formulário original envia o NOME do grupo.
-            // Se o seu endpoint POST /api/products espera um ID, 
-            // você deve mudar 'option.value = grupo.nome' para 'option.value = grupo.id'
+            // ATENÇÃO: O endpoint POST espera o NOME do grupo.
+            // Se você preferir enviar o ID, mude option.value = grupo.id
+            // e ajuste o endpoint POST /api/products para buscar o ID.
+            // Por simplicidade, manteremos o NOME.
             option.value = grupo.nome; 
             option.textContent = grupo.nome;
             groupSelect.appendChild(option);
@@ -54,16 +55,16 @@ async function handleFormSubmit(e) {
     e.preventDefault(); // Impede o recarregamento da página
 
     const formData = new FormData(form);
-    let detalhesVariação = {};
+    let detalhesProduto = {};
 
     // Tenta parsear o JSON de detalhes
     try {
-        const detalhesJson = formData.get('variacao_detalhes');
+        const detalhesJson = formData.get('produto_detalhes');
         if (detalhesJson) {
-            detalhesVariação = JSON.parse(detalhesJson);
+            detalhesProduto = JSON.parse(detalhesJson);
         }
     } catch (error) {
-        showNotification('O JSON nos detalhes da variação é inválido.', 'danger');
+        showNotification('O JSON nos detalhes do produto é inválido.', 'danger');
         return;
     }
     
@@ -72,18 +73,20 @@ async function handleFormSubmit(e) {
         ? formData.get('group')
         : formData.get('new_group_name');
 
-    // Monta o payload para a API
+    // Monta o payload para a API (nova estrutura)
     const payload = {
-        grupo: { nome: groupName },
+        grupo: { 
+            nome: groupName 
+        },
         categoria: {
             nome: formData.get('categoria_nome'),
             descricao: formData.get('categoria_descricao')
         },
-        produto: { nome: formData.get('produto_nome') },
-        variacao: {
-            codigo: formData.get('variacao_codigo'),
-            preco: parseFloat(formData.get('variacao_preco')),
-            detalhes: detalhesVariação
+        produto: {
+            nome: formData.get('produto_nome'),
+            codigo: formData.get('produto_codigo'),
+            preco: parseFloat(formData.get('produto_preco')),
+            detalhes: detalhesProduto
         },
         dependencias: {
             motor: formData.get('dependente_motor') === 'on',
@@ -92,7 +95,7 @@ async function handleFormSubmit(e) {
     };
 
     // Validação básica
-    if (!payload.grupo.nome || !payload.categoria.nome || !payload.produto.nome || !payload.variacao.codigo || !payload.variacao.preco) {
+    if (!payload.grupo.nome || !payload.categoria.nome || !payload.produto.nome || !payload.produto.codigo || !payload.produto.preco) {
         showNotification("Por favor, preencha todos os campos obrigatórios.", 'warning');
         return;
     }
@@ -114,7 +117,7 @@ async function handleFormSubmit(e) {
             handleGroupSelectionChange(); // Reseta a visibilidade dos campos
             loadGroups(); // Recarrega os grupos (caso um novo tenha sido adicionado)
         } else {
-            showNotification('Erro: ' + result.error, 'danger');
+            showNotification('Erro: ' + (result.error || 'Erro desconhecido'), 'danger');
         }
     } catch (error) {
         console.error('Erro na requisição:', error);
@@ -125,10 +128,12 @@ async function handleFormSubmit(e) {
 // --- INICIALIZAÇÃO DO MÓDULO ---
 // Como 'type="module"' já adia a execução, podemos anexar os eventos diretamente.
 
-groupSelection.addEventListener('change', handleGroupSelectionChange);
-form.addEventListener('submit', handleFormSubmit);
+document.addEventListener('DOMContentLoaded', () => {
+    groupSelection.addEventListener('change', handleGroupSelectionChange);
+    form.addEventListener('submit', handleFormSubmit);
 
-// Carrega os grupos iniciais
-loadGroups();
-// Define o estado inicial dos campos de grupo
-handleGroupSelectionChange();
+    // Carrega os grupos iniciais
+    loadGroups();
+    // Define o estado inicial dos campos de grupo
+    handleGroupSelectionChange();
+});

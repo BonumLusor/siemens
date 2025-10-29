@@ -1,0 +1,13 @@
+{
+  "name": "teste",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}

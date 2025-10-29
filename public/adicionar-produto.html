@@ -46,12 +46,14 @@
                 </div>
             </div>
             
-            <!-- CATEGORIA E PRODUTO -->
+            <!-- CATEGORIA E PRODUTO (COMBINADOS) -->
             <div class="section">
                 <h2 class="section-title">2. Categoria e Produto</h2>
+                
+                <!-- Campos da Categoria -->
                 <div class="form-group">
                     <label for="categoria_nome">Nome da Categoria/Família <span class="required">*</span></label>
-                    <input type="text" id="categoria_nome" name="categoria_nome" required placeholder="Ex: SIRIUS 3RW40">
+                    <input type="text" id="categoria_nome" name="categoria_nome" required placeholder="Ex: SIRIUS 3RV2 (Disjuntores)">
                 </div>
                  <div class="form-group">
                     <label for="categoria_descricao">Descrição da Categoria (Opcional)</label>
@@ -68,29 +70,29 @@
                         A compatibilidade depende da tensão da rede (Ex: Fontes)
                     </div>
                 </div>
+                
                 <hr style="margin: 20px 0;">
+
+                <!-- Campos do Produto (Anteriormente 'Variação') -->
+                <h3 style="margin-bottom: 15px;">Dados do Produto Final</h3>
                 <div class="form-group">
                     <label for="produto_nome">Nome do Produto <span class="required">*</span></label>
-                    <input type="text" id="produto_nome" name="produto_nome" required placeholder="Ex: Soft Starter 200-480V 25A">
+                    <input type="text" id="produto_nome" name="produto_nome" required placeholder="Ex: Disjuntor (Parafuso) 0,11-0,16A">
                 </div>
-            </div>
-
-            <!-- VARIAÇÃO -->
-            <div class="section">
-                <h2 class="section-title">3. Variação do Produto</h2>
                  <div class="form-row">
                     <div class="form-group">
-                        <label for="variacao_codigo">Código da Variação <span class="required">*</span></label>
-                        <input type="text" id="variacao_codigo" name="variacao_codigo" required placeholder="Ex: 3RW4026-1BB14">
+                        <label for="produto_codigo">Código do Produto <span class="required">*</span></label>
+                        <input type="text" id="produto_codigo" name="produto_codigo" required placeholder="Ex: 3RV2011-0AA10">
                     </div>
                     <div class="form-group">
-                        <label for="variacao_preco">Preço (R$) <span class="required">*</span></label>
-                        <input type="number" id="variacao_preco" name="variacao_preco" step="0.01" required placeholder="1234.56">
+                        <label for="produto_preco">Preço (R$) <span class="required">*</span></label>
+                        <input type="number" id="produto_preco" name="produto_preco" step="0.01" required placeholder="174.48">
                     </div>
                 </div>
                  <div class="form-group">
-                    <label for="variacao_detalhes">Outros Detalhes da Variação (JSON)</label>
-                    <textarea id="variacao_detalhes" name="variacao_detalhes" rows="4" placeholder='{ "descricao": "24 V DC/20 A/4 x 5 A", "dimensoes": "125x125x150" }'></textarea>
+                    <label for="produto_detalhes">Outros Detalhes (JSON)</label>
+                    <textarea id="produto_detalhes" name="produto_detalhes" rows="4" placeholder='{ "faixa_ajuste_A": "0,11-0,16", "tipo_conexao": "parafuso" }'></textarea>
+                    <small class="help-text">Insira aqui campos extras (ex: faixa_ajuste_A, corrente_ac3_A, dimensoes) que serão usados para filtros e exibição.</small>
                 </div>
             </div>
 
@@ -101,6 +103,9 @@
         </form>
     </div>
 
-    <script type="module" src="adicionar-produto.js"></script>
+    <!-- Carrega os mesmos scripts de api.js e ui.js para reutilizar as funções -->
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/adicionar-produto.js"></script>
 </body>
 </html>
