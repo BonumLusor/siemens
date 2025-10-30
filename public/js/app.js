@@ -115,6 +115,8 @@ async function handleTabClick(groupId) {
 // --- LÓGICA DE EVENTOS ---
 
 function setupStaticEventListeners() {
+    // public/js/app.js
+
     // Tipo de Alimentação
     document.querySelectorAll('input[name="voltageType"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
@@ -123,6 +125,9 @@ function setupStaticEventListeners() {
             const updatedMotors = motorLogic.recalculateAllMotorCurrents(appState.motors, appState.voltageType, appState.voltage);
             updateState({ motors: updatedMotors });
             updateAllUI();
+
+            // [NOVO] Envia para o webhook
+            sendProjectToWebhook(appState);
         });
     });
 
@@ -132,6 +137,9 @@ function setupStaticEventListeners() {
         const updatedMotors = motorLogic.recalculateAllMotorCurrents(appState.motors, appState.voltageType, appState.voltage);
         updateState({ motors: updatedMotors });
         updateAllUI();
+
+        // [NOVO] Envia para o webhook
+        sendProjectToWebhook(appState);
     });
 
     // Busca
@@ -195,6 +203,9 @@ function handleAddMotor() {
         motorPowerInput.value = '';
         motorNameInput.value = '';
         updateAllUI();
+
+        // [NOVO] Envia para o webhook
+        sendProjectToWebhook(appState);
     } else { 
         ui.showNotification('Insira uma potência válida para o motor!', 'warning'); 
     }
@@ -216,6 +227,9 @@ function setupDynamicEventListeners() {
             const newState = cartLogic.removeMotor(appState, motorId);
             updateState(newState);
             updateAllUI();
+
+            // [NOVO] Envia para o webhook
+            sendProjectToWebhook(appState); // O appState já foi atualizado
             return;
         }
 
@@ -303,4 +317,49 @@ function updateAllUI() {
     
     // 5. Salva o estado atual no localStorage
     storage.saveToLocalStorage(appState);
+}
+
+/**
+ * Envia o estado atual do projeto para o webhook especificado.
+ * @param {object} state - O appState completo.
+ */
+async function sendProjectToWebhook(state) {
+    const webhookUrl = 'https://n8n.techgf.com.br/webhook/recommended_itens';
+    
+    // Prepara os dados para enviar (configuração, motores e carrinho)
+    const payload = {
+        timestamp: new Date().toISOString(),
+        configuracaoProjeto: {
+            voltageType: state.voltageType,
+            voltage: state.voltage,
+        },
+        motores: state.motors,
+        carrinho: state.cart,
+        // Calcula o total de itens para facilitar
+        totalItems: state.cart.length + state.motors.reduce((acc, m) => {
+            if (m.disjuntor) acc++;
+            if (m.contator) acc++;
+            return acc;
+        }, 0)
+    };
+
+    try {
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            console.warn(`Webhook respondeu com status ${response.status}`);
+        }
+        // Log no console para sabermos que foi enviado, sem interromper o usuário
+        console.log('Dados do projeto (tensão/motores) enviados ao webhook.');
+
+    } catch (error) {
+        // Falha silenciosamente para não quebrar a aplicação principal
+        console.error('Erro ao enviar dados para o webhook:', error);
+    }
 }
