@@ -996,3 +996,56 @@ input:focus {
         padding: 2px 6px;
     }
 }
+
+
+/* Adicione este CSS ao final do seu arquivo public/styles.css */
+
+/* A tag 'Recomendado' */
+.recommendation-tag {
+    position: relative; /* Necessário para o tooltip filho se posicionar */
+}
+
+/* O tooltip (justificativa) */
+.recommendation-tag .recommendation-tooltip {
+    /* Escondido por padrão */
+    position: absolute;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+
+    /* Posicionamento (acima e à esquerda da tag) */
+    bottom: 130%; /* Posição acima da tag */
+    right: 0;      /* Alinhado à direita da tag */
+    
+    /* Estilos (Tailwind: bg-gray-800 text-white text-sm rounded-md px-3 py-2) */
+    background-color: #2d3748; 
+    color: white;
+    font-size: 0.875rem;      /* text-sm */
+    font-weight: normal;      /* Garante que não pegue o bold da tag */
+    line-height: 1.25rem;
+    border-radius: 0.375rem;  /* rounded-md */
+    padding: 0.5rem 0.75rem;  /* px-3 py-2 */
+    
+    /* Largura (Tailwind: w-64) */
+    width: 16rem; 
+    
+    /* Z-index (Tailwind: z-10) */
+    z-index: 10;
+}
+
+/* Exibe o tooltip ao passar o mouse sobre a tag */
+.recommendation-tag:hover .recommendation-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* (Opcional) Seta para o tooltip */
+.recommendation-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* Na parte de baixo do tooltip */
+    right: 10px; /* Perto da borda direita (alinhado com a tag) */
+    border-width: 5px;
+    border-style: solid;
+    border-color: #2d3748 transparent transparent transparent; /* Cor de fundo do tooltip */
+}

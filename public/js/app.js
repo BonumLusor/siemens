@@ -18,8 +18,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (savedState) {
         updateState(savedState);
         // Garante que os elementos de UI reflitam o estado carregado
-        document.querySelector(`input[name="voltageType"][value="${appState.voltageType}"]`).checked = true;
-        document.getElementById('voltage').value = appState.voltage;
+        
+        // Verifica se os elementos existem antes de tentar acessá-los
+        const voltageTypeEl = document.querySelector(`input[name="voltageType"][value="${appState.voltageType}"]`);
+        if (voltageTypeEl) voltageTypeEl.checked = true;
+        
+        const voltageEl = document.getElementById('voltage');
+        if (voltageEl) voltageEl.value = appState.voltage;
+
         const hideIncompatibleCheckbox = document.getElementById('hideIncompatible');
         if (hideIncompatibleCheckbox) {
             hideIncompatibleCheckbox.checked = appState.hideIncompatible;
@@ -35,7 +41,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 4. Carrega os grupos da API, cria as abas e carrega os produtos do primeiro grupo.
     await loadGroupsAndRenderTabs(); 
     
-    // 5. Atualiza o resumo do projeto com os dados carregados.
+    // 5. [NOVO] Se carregou motores do storage, busca recomendações
+    if (appState.motors && appState.motors.length > 0) {
+        console.log("Motores carregados do storage, buscando recomendações...");
+        await sendProjectToWebhook(appState);
+        // O updateAllUI() abaixo irá renderizar tudo com as recomendações
+    }
+    
+    // 6. Atualiza o resumo do projeto com os dados carregados.
     updateAllUI();
 });
 
@@ -119,33 +132,36 @@ function setupStaticEventListeners() {
 
     // Tipo de Alimentação
     document.querySelectorAll('input[name="voltageType"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
+        radio.addEventListener('change', async (e) => { // TORNADO ASYNC
             updateState({ voltageType: e.target.value });
             // Recalcula a corrente de todos os motores
             const updatedMotors = motorLogic.recalculateAllMotorCurrents(appState.motors, appState.voltageType, appState.voltage);
             updateState({ motors: updatedMotors });
+            
+            // [MODIFICADO] Envia para o webhook e ESPERA
+            await sendProjectToWebhook(appState);
+            // Atualiza UI após receber recomendações
             updateAllUI();
-
-            // [NOVO] Envia para o webhook
-            sendProjectToWebhook(appState);
         });
     });
 
     // Tensão
-    document.getElementById('voltage').addEventListener('change', (e) => {
+    document.getElementById('voltage').addEventListener('change', async (e) => { // TORNADO ASYNC
         updateState({ voltage: parseInt(e.target.value) });
         const updatedMotors = motorLogic.recalculateAllMotorCurrents(appState.motors, appState.voltageType, appState.voltage);
         updateState({ motors: updatedMotors });
+        
+        // [MODIFICADO] Envia para o webhook e ESPERA
+        await sendProjectToWebhook(appState);
+        // Atualiza UI após receber recomendações
         updateAllUI();
-
-        // [NOVO] Envia para o webhook
-        sendProjectToWebhook(appState);
     });
 
     // Busca
     document.getElementById('searchInput').addEventListener('input', (e) => {
         updateState({ searchQuery: e.target.value.toLowerCase() });
-        ui.renderProducts(getFilteredProducts(), appState.motors);
+        // [MODIFICADO] Passa recomendações para a renderização
+        ui.renderProducts(getFilteredProducts(), appState.motors, appState.recommendations);
     });
 
     // Adicionar Motor
@@ -184,13 +200,14 @@ function setupStaticEventListeners() {
     if (hideIncompatibleCheckbox) {
         hideIncompatibleCheckbox.addEventListener('change', (e) => {
             updateState({ hideIncompatible: e.target.checked });
-            ui.renderProducts(getFilteredProducts(), appState.motors);
+            // [MODIFICADO] Passa recomendações para a renderização
+            ui.renderProducts(getFilteredProducts(), appState.motors, appState.recommendations);
             storage.saveToLocalStorage(appState);
         });
     }
 }
 
-function handleAddMotor() {
+async function handleAddMotor() { // TORNADO ASYNC
     const motorPowerInput = document.getElementById('motorPower');
     const motorNameInput = document.getElementById('motorName');
     const motorPower = parseFloat(motorPowerInput.value);
@@ -202,10 +219,12 @@ function handleAddMotor() {
         
         motorPowerInput.value = '';
         motorNameInput.value = '';
+        
+        // [MODIFICADO] Envia para o webhook e ESPERA
+        await sendProjectToWebhook(appState);
+        // Atualiza UI após receber recomendações
         updateAllUI();
 
-        // [NOVO] Envia para o webhook
-        sendProjectToWebhook(appState);
     } else { 
         ui.showNotification('Insira uma potência válida para o motor!', 'warning'); 
     }
@@ -218,7 +237,7 @@ function handleAddMotor() {
 function setupDynamicEventListeners() {
     
     // Listener para a lista de motores (remover motor, remover componente)
-    document.getElementById('motorList').addEventListener('click', (e) => {
+    document.getElementById('motorList').addEventListener('click', async (e) => { // TORNADO ASYNC
         const removeMotorBtn = e.target.closest('[data-action="remove-motor"]');
         const removeCompBtn = e.target.closest('[data-action="remove-component"]');
 
@@ -226,10 +245,11 @@ function setupDynamicEventListeners() {
             const motorId = parseInt(removeMotorBtn.dataset.id);
             const newState = cartLogic.removeMotor(appState, motorId);
             updateState(newState);
+            
+            // [MODIFICADO] Envia para o webhook e ESPERA
+            await sendProjectToWebhook(appState);
+            // Atualiza UI após receber recomendações
             updateAllUI();
-
-            // [NOVO] Envia para o webhook
-            sendProjectToWebhook(appState); // O appState já foi atualizado
             return;
         }
 
@@ -238,7 +258,8 @@ function setupDynamicEventListeners() {
             const componentType = removeCompBtn.dataset.type; // 'disjuntor' ou 'contator'
             const newState = cartLogic.removeComponentFromMotor(appState, motorId, componentType);
             updateState(newState);
-            updateAllUI();
+            // Não precisa de webhook aqui, mas atualiza UI
+            updateAllUI(); 
             return;
         }
     });
@@ -304,10 +325,12 @@ function getFilteredProducts() {
  */
 function updateAllUI() {
     // 1. Renderiza os produtos (filtrados)
-    ui.renderProducts(getFilteredProducts(), appState.motors);
+    // [MODIFICADO] Passa as recomendações
+    ui.renderProducts(getFilteredProducts(), appState.motors, appState.recommendations);
     
     // 2. Atualiza a lista de motores
-    ui.updateMotorList(appState.motors);
+    // [MODIFICADO] Passa as recomendações
+    ui.updateMotorList(appState.motors, appState.recommendations);
     
     // 3. Atualiza o carrinho
     ui.updateCart(appState.cart, appState.motors);
@@ -320,10 +343,17 @@ function updateAllUI() {
 }
 
 /**
- * Envia o estado atual do projeto para o webhook especificado.
+ * Envia o estado atual do projeto para o webhook e salva as recomendações recebidas.
  * @param {object} state - O appState completo.
  */
 async function sendProjectToWebhook(state) {
+    // [MODIFICADO] Se não há motores, limpa recomendações e sai
+    if (!state.motors || state.motors.length === 0) {
+        console.log("Sem motores, limpando recomendações.");
+        updateState({ recommendations: null });
+        return; // Retorna silenciosamente
+    }
+
     const webhookUrl = 'https://n8n.techgf.com.br/webhook/recommended_itens';
     
     // Prepara os dados para enviar (configuração, motores e carrinho)
@@ -353,13 +383,19 @@ async function sendProjectToWebhook(state) {
         });
 
         if (!response.ok) {
-            console.warn(`Webhook respondeu com status ${response.status}`);
+            throw new Error(`Webhook respondeu com status ${response.status}`);
         }
-        // Log no console para sabermos que foi enviado, sem interromper o usuário
-        console.log('Dados do projeto (tensão/motores) enviados ao webhook.');
+
+        // [MODIFICADO] Pega a resposta JSON e salva no estado
+        const recommendationData = await response.json();
+        console.log('Recomendações recebidas:', recommendationData);
+        updateState({ recommendations: recommendationData }); 
 
     } catch (error) {
         // Falha silenciosamente para não quebrar a aplicação principal
-        console.error('Erro ao enviar dados para o webhook:', error);
+        console.error('Erro ao buscar recomendações do webhook:', error);
+        // Limpa recomendações em caso de erro
+        updateState({ recommendations: null });
     }
 }
+

@@ -20,8 +20,9 @@ export function showNotification(message, type = 'success') {
  * Renderiza a lista de produtos no grid.
  * @param {Array} products - A lista de produtos filtrados para exibir.
  * @param {Array} motors - A lista de motores para checagem de compatibilidade.
+ * @param {Object | null} recommendations - O objeto de recomendações do webhook.
  */
-export function renderProducts(products, motors) {
+export function renderProducts(products, motors, recommendations) {
     const grid = document.getElementById('productsGrid');
 
     if (!grid) return; // Sai se o elemento não existir
@@ -31,14 +32,37 @@ export function renderProducts(products, motors) {
         return;
     }
 
+    // [NOVO] Cria um Map de todos os produtos recomendados para fácil consulta
+    const allRecommendedCodes = new Map();
+    if (recommendations && recommendations.motores) {
+        for (const motor of recommendations.motores) {
+            (motor.disjuntor || []).forEach(r => allRecommendedCodes.set(r.codigo, r.justificativa));
+            (motor.contator || []).forEach(r => allRecommendedCodes.set(r.codigo, r.justificativa));
+            (motor.softstarter || []).forEach(r => allRecommendedCodes.set(r.codigo, r.justificativa));
+        }
+    }
+
     grid.innerHTML = products.map(product => {
         const compatibility = checkProductCompatibility(product, motors);
-        let cardClass = 'product-card';
+        let cardClass = 'product-card'; // Garante que o product-card seja 'position: relative' no CSS
         if (compatibility.level === 'incompatible') cardClass += ' incompatible';
         if (compatibility.level === 'partial') cardClass += ' partial-compatible';
 
+        // [NOVO] Verifica se este produto é recomendado
+        const recInfo = allRecommendedCodes.get(product.codigo);
+        let recommendationTag = '';
+        if (recInfo) {
+            recommendationTag = `
+                <div class="recommendation-tag">
+                    ⭐ Recomendado
+                    <span class="recommendation-tooltip">${recInfo}</span>
+                </div>
+            `;
+        }
+
         return `
             <div class="${cardClass}" title="${compatibility.message}">
+                ${recommendationTag}
                 ${compatibility.level !== 'compatible' ? `<div class="incompatible-badge ${compatibility.level === 'incompatible' ? 'danger' : 'warning'}">⚠️ ${compatibility.level === 'incompatible' ? 'Incompatível' : 'Parcial'}</div>` : ''}
                 <div class="product-name">${product.nome}</div>
                 <div class="product-specs">${getProductSpecs(product)}</div>
@@ -106,15 +130,44 @@ export function updateProjectSummary(motors, voltageType, voltage) {
 /**
  * Atualiza a lista de motores na UI.
  * @param {Array} motors - A lista de motores do appState.
+ * @param {Object | null} recommendations - O objeto de recomendações do webhook.
  */
-export function updateMotorList(motors) {
+export function updateMotorList(motors, recommendations) {
     const motorList = document.getElementById('motorList');
     if (!motorList) return;
 
     if (motors.length === 0) {
         renderEmpty(motorList, "Nenhum motor adicionado");
     } else {
-        motorList.innerHTML = motors.map(motor => `
+        motorList.innerHTML = motors.map(motor => {
+            // [NOVO] Encontra as recomendações para este motor específico
+            const motorRec = recommendations?.motores?.find(m => m.id === motor.id);
+
+            // [NOVO] Função auxiliar para criar a tag de recomendação (pequena)
+            const getRecTag = (component, type) => {
+                if (!component || !motorRec || !motorRec[type]) return '';
+                
+                const recInfo = motorRec[type].find(r => r.codigo === component.codigo);
+                if (recInfo) {
+                    // Esta tag precisa de 'position: relative' no CSS
+                    // e o tooltip de 'position: absolute'
+                    return `
+                        <div class="recommendation-tag-small" title="${recInfo.justificativa}">
+                            ⭐
+                            <span class="recommendation-tooltip">${recInfo.justificativa}</span>
+                        </div>
+                    `;
+                }
+                return '';
+            };
+
+            // [NOVO] Gera as tags para os componentes
+            const disjuntorRecTag = getRecTag(motor.disjuntor, 'disjuntor');
+            const contatorRecTag = getRecTag(motor.contator, 'contator');
+            // Adicione aqui para 'softstarter' se necessário
+
+            // [MODIFICADO] Adiciona as tags ao HTML
+            return `
             <div class="motor-item" id="motor-item-${motor.id}">
                 <div class="motor-info">
                     <div class="motor-name">${motor.name}</div>
@@ -123,16 +176,16 @@ export function updateMotorList(motors) {
                 <div class="motor-components">
                     <div class="motor-component-item">
                         <span>Disjuntor:</span>
-                        ${motor.disjuntor ? `<span>${motor.disjuntor.nome} <button class="btn btn-danger btn-sm" data-action="remove-component" data-id="${motor.id}" data-type="disjuntor">x</button></span>` : `<span style="color: var(--danger);">Pendente</span>`}
+                        ${motor.disjuntor ? `<span>${disjuntorRecTag} ${motor.disjuntor.nome} <button class="btn btn-danger btn-sm" data-action="remove-component" data-id="${motor.id}" data-type="disjuntor">x</button></span>` : `<span style="color: var(--danger);">Pendente</span>`}
                     </div>
                     <div class="motor-component-item">
                         <span>Contator:</span>
-                        ${motor.contator ? `<span>${motor.contator.nome} <button class="btn btn-danger btn-sm" data-action="remove-component" data-id="${motor.id}" data-type="contator">x</button></span>` : `<span style="color: var(--danger);">Pendente</span>`}
+                        ${motor.contator ? `<span>${contatorRecTag} ${motor.contator.nome} <button class="btn btn-danger btn-sm" data-action="remove-component" data-id="${motor.id}" data-type="contator">x</button></span>` : `<span style="color: var(--danger);">Pendente</span>`}
                     </div>
                 </div>
                 <button class="btn btn-danger" data-action="remove-motor" data-id="${motor.id}">Remover</button>
             </div>
-        `).join('');
+        `}).join('');
     }
 }
 
@@ -206,3 +259,4 @@ export function renderLoading(container, message) {
             </div>`;
     }
 }
+
