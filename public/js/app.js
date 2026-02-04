@@ -341,7 +341,7 @@ function updateAllUI() {
     // 5. Salva o estado atual no localStorage
     storage.saveToLocalStorage(appState);
 }
-
+    
 /**
  * Envia o estado atual do projeto para o webhook e salva as recomendações recebidas.
  * @param {object} state - O appState completo.
